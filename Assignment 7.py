@@ -42,3 +42,29 @@ wins_count_df["Runner ups"] = finals_df["Runners-up"]
 
 print(wins_count_df)
 
+winners_list = []
+for _, row in finals_df.iterrows():
+    team_code = row["Team"]
+    years_won_str = row["Years won"]
+    if years_won_str and years_won_str != "-":
+        for y in years_won_str.split(","):
+            y = y.strip()
+            if y.isdigit():
+                winners_list.append({"Year": int(y), "Winner": team_code})
+winners_df = pd.DataFrame(winners_list)
+
+runners_list = []
+for _, row in finals_df.iterrows():
+    team_code = row["Team"]
+    years_runners_str = row["Years runners-up"]
+    if years_runners_str and years_runners_str != "-":
+        for y in years_runners_str.split(","):
+            y = y.strip()
+            if y.isdigit():
+                runners_list.append({"Year": int(y), "Runner-up": team_code})
+runners_df = pd.DataFrame(runners_list)
+
+finals_yearly_df = pd.merge(winners_df, runners_df, on="Year", how="outer")
+
+print(finals_yearly_df)
+
