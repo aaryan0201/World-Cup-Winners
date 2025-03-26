@@ -68,3 +68,77 @@ finals_yearly_df = pd.merge(winners_df, runners_df, on="Year", how="outer")
 
 print(finals_yearly_df)
 
+app = dash.Dash(__name__)
+server = app.server
+app.title = "FIFA World Cup Dashboard"
+
+fig_choropleth = px.choropleth(
+    wins_count_df,
+    locations="Team",         
+    color="Wins",
+    hover_name="Team",
+    hover_data=["Runner ups"],
+    color_continuous_scale=px.colors.sequential.Plasma,
+    title="FIFA World Cup Wins by Country"
+)
+
+app.layout = html.Div([
+    html.H1("FIFA World Cup Winners and Runner-ups Dashboard"),
+
+    dcc.Graph(
+        id="worldcup-choropleth",
+        figure=fig_choropleth
+    ),
+
+    html.Div([
+        html.Label("Select a country to view number of wins:"),
+        dcc.Dropdown(
+            id="country-dropdown",
+            options=[{"label": code, "value": code} for code in wins_count_df["Team"].unique()],
+            placeholder="Select a country"
+        ),
+        html.Div(id="country-wins-output", style={"marginTop": 20, "fontSize": "20px"})
+    ], style={"width": "48%", "display": "inline-block", "verticalAlign": "top"}),
+
+    html.Div([
+        html.Label("Select a year to view final match result:"),
+        dcc.Dropdown(
+            id="year-dropdown",
+            options=[{"label": str(y), "value": y} for y in sorted(finals_yearly_df["Year"].unique())],
+            placeholder="Select a year"
+        ),
+        html.Div(id="year-result-output", style={"marginTop": 20, "fontSize": "20px"})
+    ], style={"width": "48%", "display": "block", "verticalAlign": "top"})
+])
+
+@app.callback(
+    Output("country-wins-output", "children"),
+    Input("country-dropdown", "value")
+)
+def update_country_wins(selected_country):
+    if selected_country:
+        row = wins_count_df[wins_count_df["Team"] == selected_country]
+        if not row.empty:
+            wins = row["Wins"].values[0]
+            runner_ups = row["Runner ups"].values[0]
+            return f"{selected_country} has won the World Cup {wins} time(s) and been runner-up {runner_ups} time(s)."
+        return f"No record found for {selected_country}."
+    return "Select a country to see its number of wins and runner-ups."
+
+@app.callback(
+    Output("year-result-output", "children"),
+    Input("year-dropdown", "value")
+)
+def update_year_result(selected_year):
+    if selected_year:
+        row = finals_yearly_df[finals_yearly_df["Year"] == selected_year]
+        if not row.empty:
+            winner = row["Winner"].values[0] if "Winner" in row.columns else "Unknown"
+            runner_up = row["Runner-up"].values[0] if "Runner-up" in row.columns else "Unknown"
+            return f"In {selected_year}, {winner} won the World Cup, defeating {runner_up}."
+        else:
+            return f"No data for the year {selected_year}."
+    return "Select a year to view the final match result."
+
+if __name__ == "__main__":
+    app.run(debug=True)
