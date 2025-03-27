@@ -36,7 +36,7 @@ finals_df["Team"] = finals_df["Team"].map(country_iso)
 
 print(finals_df)
 
-wins_count_df = pd.DataFrame(dtype=np.int8)
+wins_count_df = pd.DataFrame()
 wins_count_df["Team"] = finals_df["Team"]
 wins_count_df["Wins"] = finals_df["Winners"]
 wins_count_df["Runner ups"] = finals_df["Runners-up"]
